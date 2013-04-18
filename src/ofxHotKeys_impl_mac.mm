@@ -32,9 +32,11 @@
 
 #include "ofxHotKeys.h"
 
-#ifdef TARGET_OSX
+//fumiki
+//#ifdef TARGET_OSX
+#ifdef TARGET_OF_IPHONE
 
-#include <Cocoa/Cocoa.h>
+//#include <Cocoa/Cocoa.h>
 
 bool ofGetModifierSelection(){
 	return ofGetModifierShiftPressed() || ofGetModifierSpecialPressed();
@@ -51,6 +53,7 @@ bool ofGetModifierShortcutKeyPressed(){
 }
 
 bool ofGetModifierPressed(ofxModifierKey mod) {
+/*
 	unsigned int t = 0;
 
 	if ((OF_MODIFIER_KEY_CTRL & mod) == OF_MODIFIER_KEY_CTRL)
@@ -66,6 +69,8 @@ bool ofGetModifierPressed(ofxModifierKey mod) {
 		t += NSCommandKeyMask;
 
 	return [[NSApp currentEvent] modifierFlags] & t;
+ */
+    return false; // fumiki
 }
 
 

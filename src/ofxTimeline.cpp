@@ -206,8 +206,6 @@ void ofxTimeline::setWorkingFolder(string folderPath){
 	inoutTrack->load();
     zoomer->setXMLFileName( ofToDataPath(workingFolder + name + "_zoomer.xml") );
 	zoomer->load();
-	
-	currentPage->loadTrackPositions();
 }
 
 string ofxTimeline::getWorkingFolder(){
@@ -1419,7 +1417,7 @@ void ofxTimeline::draw(){
 	if(isSetup && isShowing){
 		ofPushStyle();
 
-		glPushAttrib(GL_ENABLE_BIT);
+		//glPushAttrib(GL_ENABLE_BIT);  //fumiki
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_SCISSOR_TEST);
 		glScissor(totalDrawRect.x, 0, totalDrawRect.width, ofGetHeight());
@@ -1449,7 +1447,8 @@ void ofxTimeline::draw(){
 			modalTrack->drawModalContent();
 		}
 			
-		glPopAttrib();
+		//glPopAttrib();  //fumiki
+        glDisable(GL_SCISSOR_TEST); // fumiki
 		ofPopStyle();
 	}
 }
@@ -1870,6 +1869,8 @@ ofPtr<ofVideoPlayer> ofxTimeline::getVideoPlayer(string videoTrackName){
     return track->getPlayer();
 }
 
+//fumiki
+/*
 ofxTLAudioTrack* ofxTimeline::addAudioTrack(string trackName){
     return addAudioTrack(trackName, "");
 }
@@ -1893,6 +1894,7 @@ ofxTLAudioTrack* ofxTimeline::addAudioTrack(string trackName, string audioPath){
 ofxTLAudioTrack* ofxTimeline::getAudioTrack(string audioTrackName){
     return (ofxTLAudioTrack*)getTrack(audioTrackName);
 }
+*/
 
 ofxTLTrackHeader* ofxTimeline::getTrackHeader(string trackName){
     return getTrackHeader(getTrack(name));    

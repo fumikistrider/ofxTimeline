@@ -36,7 +36,7 @@
 #include "ofxTLTrack.h"
 #include "ofxTLTrackHeader.h"
 #include "ofxTLEvents.h"
-
+#include <map.h> //fumiki
 //typedef struct {
 //	long millis;
 //    float screenX;

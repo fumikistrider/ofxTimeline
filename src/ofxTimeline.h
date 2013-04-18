@@ -69,7 +69,7 @@
 #include "ofxTLColors.h"
 #include "ofxTLLFO.h"
 #include "ofxTLVideoTrack.h"
-#include "ofxTLAudioTrack.h"
+//#include "ofxTLAudioTrack.h" //fumiki
 
 
 typedef struct {
@@ -375,12 +375,13 @@ class ofxTimeline : ofThread {
     ofxTLVideoTrack* getVideoTrack(string videoTrackName);
     ofPtr<ofVideoPlayer> getVideoPlayer(string videoTrackName);
     
+    //fumiki
     //Audio tracks only work with PCM Wav or Aiff file
-    ofxTLAudioTrack* addAudioTrack(string trackName);
-    ofxTLAudioTrack* addAudioTrackWithPath(string audioPath);
-    ofxTLAudioTrack* addAudioTrack(string name, string audioPath);
-    ofxTLAudioTrack* getAudioTrack(string audioTrackName);
-
+    //ofxTLAudioTrack* addAudioTrack(string trackName);
+    //ofxTLAudioTrack* addAudioTrackWithPath(string audioPath);
+    //ofxTLAudioTrack* addAudioTrack(string name, string audioPath);
+    //ofxTLAudioTrack* getAudioTrack(string audioTrackName);
+    
     //used for audio and video.
     //we punt to the track to control time.
     //this can be a video or audio track
