@@ -1,0 +1,25 @@
+--- a/libs/openFrameworksCompiled/project/osx/config.osx.default.mk
++++ b/libs/openFrameworksCompiled/project/osx/config.osx.default.mk
+@@ -297,7 +297,9 @@
+ 
+ PLATFORM_FRAMEWORKS =
+ PLATFORM_FRAMEWORKS += Accelerate
+-PLATFORM_FRAMEWORKS += AGL
++# AGL was removed from the macOS SDK (deprecated since 10.14, gone in the
++# macOS 26 SDK). Nothing in openFrameworks calls into it any more.
++# PLATFORM_FRAMEWORKS += AGL
+ PLATFORM_FRAMEWORKS += ApplicationServices
+ PLATFORM_FRAMEWORKS += AudioToolbox
+ PLATFORM_FRAMEWORKS += CoreAudio
+--- a/libs/openFrameworksCompiled/project/makefileCommon/config.addons.mk
++++ b/libs/openFrameworksCompiled/project/makefileCommon/config.addons.mk
+@@ -35,6 +35,9 @@
+ 
+ # parses addons libraries, in PARSED_ADDON_LIBS receives full PATHS to addons and libs_exclude
+ define parse_addons_libraries
++	$(eval PARSED_ADDONS_LIBS = ) \
++	$(eval PARSED_ADDONS_LIBS_PLATFORM_LIBS_STATICS = ) \
++	$(eval PARSED_ADDONS_LIBS_PLATFORM_LIBS_SHARED = ) \
+ 	$(eval PARSED_ADDONS_LIBS_PLATFORM_LIB_PATHS = $(filter-out $(ADDON_LIBS_EXCLUDE),$(addsuffix /libs/*/lib/$(ABI_LIB_SUBPATH), $1))) \
+ 	$(eval PARSED_ALL_PLATFORM_LIBS = $(shell $(FIND) $(PARSED_ADDONS_LIBS_PLATFORM_LIB_PATHS) -type d 2> /dev/null | grep -v "/\.[^\.]" )) \
+ 	$(if $(PARSED_ALL_PLATFORM_LIBS), \
