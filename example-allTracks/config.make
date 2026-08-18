@@ -89,6 +89,9 @@
 #   Note: Leave a leading space when adding list items with the += operator
 ################################################################################
 # PROJECT_DEFINES = 
+# ofxTimeline compiles its audio and video tracks only when these are defined.
+PROJECT_DEFINES = TIMELINE_AUDIO_INCLUDED=1
+PROJECT_DEFINES += TIMELINE_VIDEO_INCLUDED=1
 
 ################################################################################
 # PROJECT CFLAGS
