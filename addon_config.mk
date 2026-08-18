@@ -65,7 +65,15 @@ linuxarmv7l:
 	
 osx:
 	ADDON_FRAMEWORKS += OpenAL
-	ADDON_PKG_CONFIG_LIBRARIES += sndfile
+	# Apple decodes everything through CoreAudio (see ofxAudioDecoder), so the
+	# bundled libsndfile - an x86_64/i386 binary that cannot link on Apple
+	# Silicon - is neither included nor linked. Clearing ADDON_LIBS drops the
+	# libs the makefile auto-discovered under libs/*/lib/osx.
+	ADDON_LIBS =
+	ADDON_INCLUDES_EXCLUDE = libs/sndfile/include
+	ADDON_INCLUDES_EXCLUDE += libs/openal/include
+	ADDON_INCLUDES_EXCLUDE += libs/sndfile/export
+	ADDON_INCLUDES_EXCLUDE += libs/openal/export
 win_cb:
 vs2010:
 iphone:

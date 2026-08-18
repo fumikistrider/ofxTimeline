@@ -18,7 +18,19 @@
 #include "kiss_fft.h"
 #include "kiss_fftr.h"
 
-#include <sndfile.h>
+// On Apple platforms every format ofxTimeline cares about (wav / aiff / mp3 /
+// m4a) is decoded through CoreAudio via ofxAudioDecoder, so libsndfile is not
+// used at all - the copy bundled with this addon is a stale x86_64-only binary
+// that cannot link on Apple Silicon. Other platforms keep using it.
+#if defined(TARGET_OSX) || defined(TARGET_OF_IOS)
+	#define OFX_TIMELINE_USE_SNDFILE 0
+#else
+	#define OFX_TIMELINE_USE_SNDFILE 1
+#endif
+
+#if OFX_TIMELINE_USE_SNDFILE
+	#include <sndfile.h>
+#endif
 
 #ifdef OF_USING_MPG123
 	#include <mpg123.h>
@@ -150,8 +162,10 @@ class ofOpenALSoundPlayer_TimelineAdditions : public ofBaseSoundPlayer, public o
 		void runWindow(vector<float> & signal);
 		void initSystemFFT(int bands);
 
+#if OFX_TIMELINE_USE_SNDFILE
 		bool sfReadFile(string path,vector<short> & buffer,vector<float> & fftAuxBuffer);
 		bool sfStream(string path,vector<short> & buffer,vector<float> & fftAuxBuffer);
+#endif
 #ifdef OF_USING_MPG123
 		bool mpg123ReadFile(string path,vector<short> & buffer,vector<float> & fftAuxBuffer);
 		bool mpg123Stream(string path,vector<short> & buffer,vector<float> & fftAuxBuffer);
@@ -206,7 +220,9 @@ class ofOpenALSoundPlayer_TimelineAdditions : public ofBaseSoundPlayer, public o
 		static vector<float> systemBins;
 		static vector<kiss_fft_cpx> systemCx_out;
 
+#if OFX_TIMELINE_USE_SNDFILE
 		SNDFILE* streamf;
+#endif
 		size_t stream_samples_read;
 #ifdef OF_USING_MPG123
 		mpg123_handle * mp3streamf;

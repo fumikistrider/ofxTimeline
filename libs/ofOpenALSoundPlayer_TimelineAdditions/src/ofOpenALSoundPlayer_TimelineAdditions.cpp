@@ -78,7 +78,9 @@ ofOpenALSoundPlayer_TimelineAdditions::ofOpenALSoundPlayer_TimelineAdditions(){
     channels        = 0;
     duration        = 0;
     fftCfg            = 0;
+#if OFX_TIMELINE_USE_SNDFILE
     streamf            = 0;
+#endif
     octaves         = 0;
     curMaxAverage   = 0;
     timeSet         = false;
@@ -141,6 +143,7 @@ void ofOpenALSoundPlayer_TimelineAdditions::close(){
 }
 
 // ----------------------------------------------------------------------------
+#if OFX_TIMELINE_USE_SNDFILE
 bool ofOpenALSoundPlayer_TimelineAdditions::sfReadFile(string path, vector<short> & buffer, vector<float> & fftAuxBuffer){
     SF_INFO sfInfo;
     SNDFILE* f = sf_open(path.c_str(),SFM_READ,&sfInfo);
@@ -190,6 +193,7 @@ bool ofOpenALSoundPlayer_TimelineAdditions::sfReadFile(string path, vector<short
     samplerate = sfInfo.samplerate;
     return true;
 }
+#endif // OFX_TIMELINE_USE_SNDFILE
 
 #ifdef OF_USING_MPG123
 //------------------------------------------------------------
@@ -253,12 +257,18 @@ bool ofOpenALSoundPlayer_TimelineAdditions::decoderReadFile(string path,vector<s
     duration = float(audioDecoder.getNumFrames()) / float(audioDecoder.getSampleRate());
     samplerate = audioDecoder.getSampleRate();
     return true;
-#else
+#elif OFX_TIMELINE_USE_SNDFILE
     return sfReadFile(path, buffer, fftAuxBuffer);
+#else
+    ofLogError("ofOpenALSoundPlayer_TimelineAdditions")
+        << "No audio decoder available for " << path
+        << " - add ofxAudioDecoder to this project";
+    return false;
 #endif
 }
 
 //------------------------------------------------------------
+#if OFX_TIMELINE_USE_SNDFILE
 bool ofOpenALSoundPlayer_TimelineAdditions::sfStream(string path,vector<short> & buffer,vector<float> & fftAuxBuffer){
     if(!streamf){
         SF_INFO sfInfo;
@@ -319,6 +329,7 @@ bool ofOpenALSoundPlayer_TimelineAdditions::sfStream(string path,vector<short> &
     
     return true;
 }
+#endif // OFX_TIMELINE_USE_SNDFILE
 
 #ifdef OF_USING_MPG123
 //------------------------------------------------------------
@@ -373,12 +384,21 @@ bool ofOpenALSoundPlayer_TimelineAdditions::mpg123Stream(string path,vector<shor
 
 //------------------------------------------------------------
 void ofOpenALSoundPlayer_TimelineAdditions::stream(string fileName, vector<short> & buffer){
+#if !OFX_TIMELINE_USE_SNDFILE && !defined(OF_USING_MPG123)
+    // No streaming backend on this platform - load() never gets here because it
+    // clears isStreaming, but keep the guard honest.
+    ofLogError("ofOpenALSoundPlayer_TimelineAdditions")
+        << "Streaming playback is not available in this build";
+    return;
+#else
 #ifdef OF_USING_MPG123
     if(ofFilePath::getFileExt(fileName)=="mp3" || ofFilePath::getFileExt(fileName)=="MP3" || mp3streamf){
         if(!mpg123Stream(fileName,buffer,fftAuxBuffer)) return;
     }else
 #endif
+#if OFX_TIMELINE_USE_SNDFILE
     if(!sfStream(fileName,buffer,fftAuxBuffer)) return;
+#endif
     
     fftBuffers.resize(channels);
     int numFrames = buffer.size()/channels;
@@ -389,9 +409,11 @@ void ofOpenALSoundPlayer_TimelineAdditions::stream(string fileName, vector<short
             fftBuffers[i][j] = fftAuxBuffer[j*channels+i];
         }
     }
+#endif // streaming backend available
 }
 
 void ofOpenALSoundPlayer_TimelineAdditions::readFile(string fileName, vector<short> & buffer){
+#if OFX_TIMELINE_USE_SNDFILE
     if(ofFilePath::getFileExt(fileName)!="mp3" && ofFilePath::getFileExt(fileName)!="MP3"){
         if(!sfReadFile(fileName,buffer,fftAuxBuffer)) return;
     }else{
@@ -401,6 +423,10 @@ void ofOpenALSoundPlayer_TimelineAdditions::readFile(string fileName, vector<sho
         if(!decoderReadFile(fileName,buffer,fftAuxBuffer)) return;
 #endif
     }
+#else
+    // CoreAudio reads wav / aiff / mp3 / m4a through the same path.
+    if(!decoderReadFile(fileName,buffer,fftAuxBuffer)) return;
+#endif
     
     fftBuffers.resize(channels);
     int numFrames = buffer.size()/channels;
@@ -433,6 +459,14 @@ bool ofOpenALSoundPlayer_TimelineAdditions::load(const of::filesystem::path & fi
     bLoadedOk = false;
     bMultiPlay = false;
     isStreaming = is_stream;
+#if !OFX_TIMELINE_USE_SNDFILE && !defined(OF_USING_MPG123)
+    if(isStreaming){
+        ofLogWarning("ofOpenALSoundPlayer_TimelineAdditions")
+            << "Streaming is not supported on this platform, loading "
+            << fileName << " into memory instead";
+        isStreaming = false;
+    }
+#endif
     
     // [1] init sound systems, if necessary
     initialize();
@@ -607,9 +641,10 @@ void ofOpenALSoundPlayer_TimelineAdditions::threadedFunction(){
             alGetSourcei(sources[i*channels],AL_SOURCE_STATE,&state);
             bool stream_running=false;
 #ifdef OF_USING_MPG123
-            stream_running = streamf || mp3streamf;
-#else
-            stream_running = streamf;
+            stream_running = stream_running || mp3streamf;
+#endif
+#if OFX_TIMELINE_USE_SNDFILE
+            stream_running = stream_running || streamf;
 #endif
             if(state != AL_PLAYING && stream_running && !stream_end){
                 alSourcePlayv(channels,&sources[i*channels]);
@@ -654,7 +689,9 @@ void ofOpenALSoundPlayer_TimelineAdditions::unload(){
         
         bLoadedOk = false;
     }
+#if OFX_TIMELINE_USE_SNDFILE
     streamf = 0;
+#endif
 }
 
 //------------------------------------------------------------
@@ -738,10 +775,13 @@ void ofOpenALSoundPlayer_TimelineAdditions::setPosition(float pct){
         mpg123_seek(mp3streamf,duration*pct*samplerate*channels,SEEK_SET);
     }else
 #endif
+#if OFX_TIMELINE_USE_SNDFILE
     if(streamf){
         sf_seek(streamf,duration*pct*samplerate*channels,SEEK_SET);
         stream_samples_read = 0;
-    }else{
+    }else
+#endif
+    {
         for(int i=0;i<(int)channels;i++){
             alSourcef(sources[sources.size()-channels+i],AL_SEC_OFFSET,pct*duration);
         }
@@ -767,10 +807,13 @@ float ofOpenALSoundPlayer_TimelineAdditions::getPosition() const{
         pos = float(mpg123_tell(mp3streamf)) / float(channels) / float(samplerate);
     }else
 #endif
+#if OFX_TIMELINE_USE_SNDFILE
     if(streamf){
         pos = float(stream_samples_read) / float(channels) / float(samplerate);
         return pos/duration;
-    }else{
+    }else
+#endif
+    {
         if(timeSet) return justSetTime;
         alGetSourcef(sources[sources.size()-1],AL_SAMPLE_OFFSET,&pos);
         return channels*(pos/buffer.size());
@@ -790,10 +833,13 @@ int ofOpenALSoundPlayer_TimelineAdditions::getPositionMS() const{
         pos = 1000 * float(mpg123_tell(mp3streamf)) / float(channels) / float(samplerate);
     }else
 #endif
+#if OFX_TIMELINE_USE_SNDFILE
     if(streamf){
         pos = float(stream_samples_read) / float(channels) / float(samplerate);
         return pos * 1000;
-    }else{
+    }else
+#endif
+    {
         float sampleOffset;
         alGetSourcef(sources[sources.size()-1],AL_SAMPLE_OFFSET,&sampleOffset);
         return 1000 * duration * channels * (sampleOffset/buffer.size());
