@@ -11,6 +11,39 @@
  PLATFORM_FRAMEWORKS += ApplicationServices
  PLATFORM_FRAMEWORKS += AudioToolbox
  PLATFORM_FRAMEWORKS += CoreAudio
+--- a/libs/openFrameworksCompiled/project/osx/CoreOF.xcconfig
++++ b/libs/openFrameworksCompiled/project/osx/CoreOF.xcconfig
+@@ -1,10 +1,10 @@
+ //// define which C++ library is required to build, based on target architecture
+ CLANG_CXX_LIBRARY = libc++
+-CLANG_CXX_LANGUAGE_STANDARD = c++11
++CLANG_CXX_LANGUAGE_STANDARD = c++17
+ 
+ CLANG_ENABLE_OBJC_ARC = YES
+ 
+-MACOSX_DEPLOYMENT_TARGET = 10.9
++MACOSX_DEPLOYMENT_TARGET = 10.15
+ 
+ 
+ HEADER_OF = "$(OF_PATH)/libs/openFrameworks/**"
+@@ -50,7 +50,7 @@
+ OF_CORE_HEADERS = $(HEADER_OF) $(HEADER_FREETYPE) $(HEADER_FREETYPE2) $(HEADER_FMOD) $(HEADER_GLEW) $(HEADER_FREEIMAGE) $(HEADER_TESS2) $(HEADER_CAIRO) $(HEADER_RTAUDIO) $(HEADER_GLFW) $(HEADER_BOOST) $(HEADER_UTF8) $(HEADER_JSON) $(HEADER_GLM) $(HEADER_CURL) $(HEADER_URIPARSER) $(HEADER_PUGIXML)
+ 
+ 
+-OF_CORE_FRAMEWORKS = -framework Accelerate -framework AGL -framework AppKit -framework ApplicationServices -framework AudioToolbox -framework AVFoundation -framework Cocoa -framework CoreAudio -framework CoreFoundation -framework CoreMedia -framework CoreServices -framework CoreVideo -framework IOKit -framework OpenGL -framework QuartzCore -framework Security
++OF_CORE_FRAMEWORKS = -framework Accelerate -framework AppKit -framework ApplicationServices -framework AudioToolbox -framework AVFoundation -framework Cocoa -framework CoreAudio -framework CoreFoundation -framework CoreMedia -framework CoreServices -framework CoreVideo -framework IOKit -framework OpenGL -framework QuartzCore -framework Security
+ 
+ 
+ ALWAYS_SEARCH_USER_PATHS = NO
+@@ -93,8 +93,6 @@
+ 
+ DEAD_CODE_STRIPPING = YES
+ GCC_AUTO_VECTORIZATION = YES
+-GCC_ENABLE_SSE3_EXTENSIONS = YES
+-GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES
+ GCC_INLINES_ARE_PRIVATE_EXTERN = NO
+ GCC_SYMBOLS_PRIVATE_EXTERN = NO
+ ONLY_ACTIVE_ARCH = YES
 --- a/libs/openFrameworksCompiled/project/makefileCommon/config.addons.mk
 +++ b/libs/openFrameworksCompiled/project/makefileCommon/config.addons.mk
 @@ -35,6 +35,9 @@

@@ -1,9 +1,13 @@
 # openFrameworks core patches
 
-Two files in the openFrameworks 0.12.0 osx release have to be changed before
-ofxTimeline links on a modern Mac. They live in the openFrameworks tree, not in
-this addon, so they are kept here as a patch — **reinstalling or re-downloading
-openFrameworks silently reverts them**, and the symptoms are confusing.
+Three files in the openFrameworks 0.12.0 osx release have to be changed before
+ofxTimeline builds and links on a modern Mac — two for the makefile build, one
+for the Xcode build. They live in the openFrameworks tree, not in this addon, so
+they are kept here as a patch — **reinstalling or re-downloading openFrameworks
+silently reverts them**, and the symptoms are confusing.
+
+None of this is specific to ofxTimeline: every openFrameworks project on the
+machine needs the same changes.
 
 ## Applying
 
@@ -60,3 +64,23 @@ ld: warning: ignoring file …/libsndfile.a: fat file missing arch 'arm64'
 
 The fix clears the three accumulator variables at the top of the macro. This is
 an upstream bug and worth reporting to openFrameworks.
+
+### `CoreOF.xcconfig` — make the Xcode build match the makefile build
+
+This one only affects Xcode; the makefiles never read it. Four settings were
+stale, and the first is the serious one:
+
+- `CLANG_CXX_LANGUAGE_STANDARD = c++11` → `c++17`. The openFrameworks 0.12 core
+  itself does not compile as C++11: `ofRandomDistributions.h` uses
+  `std::enable_if_t` and `std::is_same_v`, `ofRandomEngine.h` uses deduced
+  return types, `ofSingleton.hpp` uses class template argument deduction. The
+  makefiles have always built with `-std=c++17` (`MAC_OS_CPP_VER` in
+  `config.osx.default.mk`), so the shipped xcconfig simply disagrees with the
+  code next to it. Any Xcode project in this release fails with dozens of
+  "no template named 'enable_if_t' in namespace 'std'" errors until this is
+  changed.
+- `MACOSX_DEPLOYMENT_TARGET = 10.9` → `10.15`, matching `MAC_OS_MIN_VERSION`
+  in `config.osx.default.mk`.
+- `-framework AGL` dropped from `OF_CORE_FRAMEWORKS`, same reason as above.
+- `GCC_ENABLE_SSE3_EXTENSIONS` and `GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS`
+  removed — x86-only codegen settings that have no meaning on Apple Silicon.
